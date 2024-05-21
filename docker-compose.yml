@@ -1,0 +1,35 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+
+    env_file:
+      - .env
+    environment:
+      - PORT=${PORT}
+
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+
+      - DB_PORT=${DB_PORT}
+      - DB_HOST=${DB_HOST}
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+    depends_on:
+      - db
+
+  db:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mondongo:/data/db
+
+volumes:
+  mondongo:
