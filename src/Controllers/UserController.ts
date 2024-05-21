@@ -48,7 +48,6 @@ export default class UserController {
       return res.json({ success: false, error: "username or password don't match" })
 
     } catch (error) {
-      console.log(error)
       return res.json({ success: false, error: "username or password don't match" })
     }
   }
@@ -90,7 +89,6 @@ export default class UserController {
       await user.save();
       return res.json({ message: 'Preferences updated' });
     } catch (err) {
-      console.error(err);
       return res.status(500).json({ message: 'Server error' });
     }
   }

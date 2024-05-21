@@ -40,8 +40,6 @@ export default class MovieController {
           preferenceScore
         }
       })
-
-      console.log(weightedVideos)
   
       weightedVideos.sort((a, b) => b.preferenceScore - a.preferenceScore)
   
@@ -50,7 +48,6 @@ export default class MovieController {
       return res.json(sortedVideos)
   
     } catch (err) {
-      console.error(err);
       return res.status(500).json({ msg: 'Server error' })
     }
   }
