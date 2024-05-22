@@ -3,6 +3,8 @@ import Movie from '../Models/Movie'
 import User, { IUser, Preferences } from '../Models/User'
 import { validateToken } from '../Config/jwt'
 import { movieValidation } from '../Validations/movieValidation'
+import { cryptoNamed } from '../Config/uuidName'
+import { uploadS3Images, getS3Images } from '../Config/s3'
 
 export default class MovieController {
   static async getMovieForUser (req: Request, res: Response) {
@@ -25,27 +27,38 @@ export default class MovieController {
   
       const videos = await Movie.find()
 
-      const weightedVideos = videos.map(video => {
+      const weightedVideos = await Promise.all(videos.map(async video => {
+        video.url = await getS3Images(video.url)
         const preferenceScore = preferences[video.genre as keyof Preferences] || 0
         return {
           video,
           preferenceScore
         }
-      })
+      }))
   
       weightedVideos.sort((a, b) => b.preferenceScore - a.preferenceScore)
   
       const sortedVideos = weightedVideos.map(item => item.video)
   
       return res.json(sortedVideos)
-  
     } catch (error) {
       return res.status(500).json({ message: (error as Error).message })
     }
   }
 
-  static insertMovie (req: Request, res: Response) {
+  static async insertMovie (req: Request, res: Response) {
     try {
+      let file: Express.Multer.File
+
+      if (req.file) {
+        file = req.file
+        req.body.url = cryptoNamed(file.originalname)
+      } else {
+        throw new Error('File is require')
+      }
+      
+      req.body.duration = parseInt(req.body.duration)
+
       const results = movieValidation(req.body)
 
       if (results.error) 
@@ -57,7 +70,7 @@ export default class MovieController {
         genre: data.genre.toLowerCase()
       }
       const newMovie = new Movie(data)
-      
+      await uploadS3Images(data.url, file.buffer)
       newMovie.save()
       return res.json({ success: true })
     } catch (error) {
