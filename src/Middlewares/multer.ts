@@ -7,7 +7,7 @@ const multerStorage = () => multer.memoryStorage()
 export const multerMiddleware = () => multer({
   storage: multerStorage(),
   fileFilter: (_req, file, callback) => {
-    const fileType = /jpeg|jpg|png|gif|webp|avif/
+    const fileType = /mp4|mov|avi|wmv|mpg/
     const mimetype = fileType.test(file.mimetype)
     const extname = fileType.test(path.extname(file.originalname))
 
