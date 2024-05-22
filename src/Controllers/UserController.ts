@@ -4,22 +4,28 @@ import bcrypt from 'bcrypt'
 import User from '../Models/User'
 import Movie from '../Models/Movie'
 import { Preferences, IUser } from '../Models/User'
+import { userValidation, userValidationPartial, videoValidation } from '../Validations/userValidation'
 
 const saltRounds = 10
 
 export default class UserController {
   static async insertUser (req: Request, res: Response) {
     try {
-      const data = req.body
-      
+      const results = userValidation(req.body)
+
+      if (results.error) 
+        return res.status(400).json({ error: results.error.issues[0].message })
+  
+      const data = results.data
       const salt = await bcrypt.genSalt(saltRounds)
       const hash = await bcrypt.hash(data.password, salt)
+
       const newUser = new User({
         username: data.username,
         password: hash
       })
-
       newUser.save()
+
       return res.json({ success: true })
     } catch (error) {
       return res.status(400).json({ succsess: false, error: 'Error to insert user' })
@@ -28,13 +34,18 @@ export default class UserController {
   
   static async findUser (req: Request, res: Response) {
     try {
-      const data = req.body
+      const results = userValidationPartial(req.body)
 
+      if (results.error) 
+        return res.status(400).json({ error: results.error.issues[0].message })
+      
+      const data = results.data
+      
       const user = await User.findOne({
         username: data.username!
       })
 
-      const comparePassword = await bcrypt.compare(data.password, user!.password!)
+      const comparePassword = await bcrypt.compare(data.password!, user!.password)
 
       if (comparePassword) {
         return res.json({ 
@@ -55,17 +66,22 @@ export default class UserController {
     let token: string
 
     try {
-      const { videoId, watchTime } = req.body
-
       if (!authorization || !authorization.startsWith('Bearer')) throw new Error('token not provided')
-
+        
       token = authorization.substring(7)
       const decodedToken = validateToken(token)
 
       if (decodedToken === null) throw new Error('invalid token')
         
+      const results = videoValidation(req.body)
+        
+      if (results.error) 
+        return res.status(400).json({ error: results.error.issues[0].message })
+      
+      const { video_id, watch_time } = results.data
+
       const user = await User.findById(decodedToken.user_id) as IUser
-      const video = await Movie.findById(videoId)
+      const video = await Movie.findById(video_id)
 
       if (!user || !video) throw new Error('User or video not found')
 
@@ -73,7 +89,7 @@ export default class UserController {
       const threshold = 10
 
       if (user.preferences && genre in user.preferences) {
-        if (watchTime >= threshold) {
+        if (watch_time >= threshold) {
           user.preferences[genre] += 1
         } else {
           user.preferences[genre] -= 1

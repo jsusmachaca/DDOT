@@ -2,13 +2,7 @@ import { Request, Response } from 'express'
 import Movie from '../Models/Movie'
 import User, { IUser, Preferences } from '../Models/User'
 import { validateToken } from '../Config/jwt'
-
-interface Body {
-  name: string,
-  genre: string,
-  url: string,
-  duration: number
-}
+import { movieValidation } from '../Validations/movieValidation'
 
 export default class MovieController {
   static async getMovieForUser (req: Request, res: Response) {
@@ -51,16 +45,23 @@ export default class MovieController {
   }
 
   static insertMovie (req: Request, res: Response) {
-    let data: Body = req.body
+    try {
+      const results = movieValidation(req.body)
 
-    data = {
-      ...data,
-      genre: data.genre.toLowerCase()
+      if (results.error) 
+        return res.status(400).json({ error: results.error.issues[0].message })
+      
+      let { data } = results
+      data = {
+        ...data,
+        genre: data.genre.toLowerCase()
+      }
+      const newMovie = new Movie(data)
+      
+      newMovie.save()
+      return res.json({ success: true })
+    } catch (error) {
+      return res.status(500).json({ message: (error as Error).message })
     }
-
-    const newMovie = new Movie(data)
-
-    newMovie.save()
-    return res.json({ success: true })
   }
 }
