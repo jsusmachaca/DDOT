@@ -1,7 +1,7 @@
-import { Request, Response } from "express"
-import Movie from "../Models/Movie"
-import User, { IUser, Preferences } from "../Models/User"
-import { validateToken } from "../config/jwt"
+import { Request, Response } from 'express'
+import Movie from '../Models/Movie'
+import User, { IUser, Preferences } from '../Models/User'
+import { validateToken } from '../Config/jwt'
 
 interface Body {
   name: string,
@@ -25,9 +25,7 @@ export default class MovieController {
         
       const user = await User.findById(decodedToken.user_id) as IUser
   
-      if (!user) {
-        return res.status(404).json({ msg: 'User not found' })
-      }
+      if (!user) throw new Error('User not found')
   
       const preferences = user.preferences
   
@@ -47,8 +45,8 @@ export default class MovieController {
   
       return res.json(sortedVideos)
   
-    } catch (err) {
-      return res.status(500).json({ msg: 'Server error' })
+    } catch (error) {
+      return res.status(500).json({ message: (error as Error).message })
     }
   }
 

@@ -1,10 +1,9 @@
-import { Request, Response } from "express";
-import { generateToken } from "../config/jwt";
+import { Request, Response } from 'express'
+import { generateToken, validateToken } from '../Config/jwt'
 import bcrypt from 'bcrypt'
 import User from '../Models/User'
-import Movie from "../Models/Movie";
-import { Preferences, IUser } from '../Models/User'; // Importar la interfaz de preferencias
-import { validateToken } from "../config/jwt";
+import Movie from '../Models/Movie'
+import { Preferences, IUser } from '../Models/User'
 
 const saltRounds = 10
 
@@ -23,7 +22,7 @@ export default class UserController {
       newUser.save()
       return res.json({ success: true })
     } catch (error) {
-      return res.status(400).json({ succsess: 'Error to insert user' })
+      return res.status(400).json({ succsess: false, error: 'Error to insert user' })
     }
   }
   
@@ -45,10 +44,9 @@ export default class UserController {
           } 
         })
       }
-      return res.json({ success: false, error: "username or password don't match" })
-
+      throw new Error('username or password don\'t match')
     } catch (error) {
-      return res.json({ success: false, error: "username or password don't match" })
+      return res.json({ success: false, error: (error as Error).message })
     }
   }
 
@@ -69,27 +67,24 @@ export default class UserController {
       const user = await User.findById(decodedToken.user_id) as IUser
       const video = await Movie.findById(videoId)
 
-      if (!user || !video) {
-        return res.status(404).json({ message: 'User or video not found' })
-      }
+      if (!user || !video) throw new Error('User or video not found')
 
       const genre = video.genre as keyof Preferences
       const threshold = 10
 
       if (user.preferences && genre in user.preferences) {
         if (watchTime >= threshold) {
-          user.preferences[genre] += 1;
+          user.preferences[genre] += 1
         } else {
-          user.preferences[genre] -= 1;
+          user.preferences[genre] -= 1
         }
       } else {
-        return res.status(400).json({ message: 'Invalid genre or preferences not found' });
+        throw new Error('Invalid genre or preferences not found')
       }
-
-      await user.save();
-      return res.json({ message: 'Preferences updated' });
-    } catch (err) {
-      return res.status(500).json({ message: 'Server error' });
+      await user.save()
+      return res.json({ message: 'Preferences updated' })
+    } catch (error) {
+      return res.status(500).json({ success: false, message: (error as Error).message })
     }
   }
 }

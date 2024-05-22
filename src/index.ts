@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import './config/config'
+import './Config/config'
 
 import { movie } from './Routes/movie'
 import { user } from './Routes/user'
