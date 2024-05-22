@@ -14,7 +14,7 @@ export const multerMiddleware = () => multer({
     if (mimetype && extname) {
       callback(null, true)
     } else {
-      callback(new Error('the file must be an image'))
+      callback(new Error('the file must be an video'))
     }
   }
 }).single('url')
