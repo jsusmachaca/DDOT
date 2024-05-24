@@ -8,7 +8,7 @@ interface userData {
 
 interface movieData { 
   video_id: string, 
-  watch_time: string 
+  watch_time: number 
 }
 
 const userSchema = z.object({
@@ -18,7 +18,7 @@ const userSchema = z.object({
 })
 
 const preferenceSchema = z.object({
-  video_id: z.number({ required_error: 'Error, insert video id' }), 
+  video_id: z.string({ required_error: 'Error, insert video id' }), 
   watch_time: z.number({ required_error: 'Error, insert watch time' })
 })
 
