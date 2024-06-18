@@ -13,6 +13,7 @@ export interface IUser extends Document {
   username: string;
   password: string;
   preferences: Preferences;
+  interactions: { video_id: string, watch_time: number }[]
 }
 
 const UserSchema = new Schema<IUser>({
@@ -25,8 +26,9 @@ const UserSchema = new Schema<IUser>({
     fancy: { type: Number, default: 0 },
     science_fiction: { type: Number, default: 0 },
     terror: { type: Number, default: 0 }
-  }
-});
+  },
+  interactions: [{ video_id: { type: String }, watch_time: { type: Number } }]
+})
 
 const User = model<IUser>('User', UserSchema);
 
